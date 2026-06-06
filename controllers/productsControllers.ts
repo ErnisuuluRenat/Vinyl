@@ -1,6 +1,7 @@
-import { getDBConnection } from "../db/db.js"
+import { Request, Response } from "express"
+import { getDBConnection } from "../db/db"
 
-export async function getGenres(req, res) {
+export async function getGenres(req : Request, res : Response) {
 
   console.log('genres')
 
@@ -11,13 +12,17 @@ export async function getGenres(req, res) {
     const genres = products.map((product) => product['genre'])
 
     res.status(200).json([...new Set(genres)])
-  } catch(err) {
-    res.status(500).json({error : "Failed to fetch genres", details: err.message})
+  } catch(err : unknown) {
+    if (err instanceof(Error)) {
+      res.status(500).json({error : "Failed to fetch genres", details: err.message})
+    } else {
+      res.status(500).json({error: "Unexpected error occured:", err})
+    }
   }
 
 }
 
-export async function getProducts(req, res) {
+export async function getProducts(req : Request, res: Response) {
     try {
     const db = await getDBConnection()
 
@@ -26,10 +31,10 @@ export async function getProducts(req, res) {
     let query = "SELECT * from products "
     let params = []
 
-    if (genre) {
+    if (genre && typeof genre === "string") {
       query += ` WHERE genre = ?`
       params.push(genre)
-    } else if (search) {
+    } else if (search && typeof search === 'string') {
       query += ` WHERE title like ? or artist like ? or genre like ?`
 
       params.push(`%${search}%`, `%${search}%`, `%${search}%`)
@@ -46,8 +51,12 @@ export async function getProducts(req, res) {
     const products = await db.all(query, params)
     res.status(200).json(products)
 
-  } catch(err) {
-    res.status(500).json({error : "Failed to fetch products", details: err.message})
+  } catch(err : unknown) {
+    if (err instanceof(Error)) {
+      res.status(500).json({error : "Failed to fetch genres", details: err.message})
+    } else {
+      res.status(500).json({error: "Unexpected error occured:", err})
+    }
   }
 
   console.log('products')

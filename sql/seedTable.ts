@@ -3,7 +3,7 @@ import { open } from 'sqlite'
 import path from "node:path"
 import { vinyl } from './data.js'
 
-async function seedTable() {
+async function seedTable(): Promise<void> {
     const db = await open({
         filename: path.join('database.db'),
         driver: sqlite3.Database
@@ -20,8 +20,13 @@ async function seedTable() {
         console.log("all products inserted")
         
     }catch(err) {
-        await db.exec("ROLLBACK")
-        console.log(`Error inserting data `, err.message)
+        if (err instanceof(Error)) {
+            await db.exec("ROLLBACK")
+            console.log(`Error inserting data `, err.message)
+        } else {
+            console.log("Unexpected error occured:", err)
+        }
+        
     } finally {
         db.close()
     }

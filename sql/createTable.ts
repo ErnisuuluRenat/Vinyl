@@ -2,7 +2,7 @@ import sqlite3 from 'sqlite3'
 import { open } from 'sqlite'
 import path from "node:path"
 
-async function createTable() {
+async function createTable(): Promise<void> {
     const db = await open({
         filename: "database.db",
         driver: sqlite3.Database
@@ -25,7 +25,7 @@ async function createTable() {
     console.log('Table was created')
 }
 
-async function createTableUsers() {
+async function createTableUsers() : Promise<void> {
     const db = await open({
         filename: path.join("database.db"),
         driver: sqlite3.Database

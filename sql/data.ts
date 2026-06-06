@@ -1,4 +1,14 @@
-export const vinyl = [
+type Vinyl = {
+    title: string
+    artist: string
+    price: number
+    image: string
+    year: number
+    genre: string,
+    stock: number
+}
+
+export const vinyl: Vinyl[] = [
     {
         title: 'Selling Dogma',
         artist: 'The Clouds',
