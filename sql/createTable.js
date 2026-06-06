@@ -25,4 +25,23 @@ async function createTable() {
     console.log('Table was created')
 }
 
-createTable()
+async function createTableUsers() {
+    const db = await open({
+        filename: path.join("database.db"),
+        driver: sqlite3.Database
+    })
+
+    await db.exec(`CREATE TABLE if not exists users(
+        id integer primary key autoincrement,
+        name text,
+        email text unique not null,
+        username text unique not null,
+        password text not null,
+        created_at datetime default current_timestamp
+        )`)
+
+    await db.close()
+    console.log('Table users was successfully created')
+}
+
+createTableUsers()
