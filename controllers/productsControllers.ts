@@ -58,7 +58,4 @@ export async function getProducts(req : Request, res: Response) {
       res.status(500).json({error: "Unexpected error occured:", err})
     }
   }
-
-  console.log('products')
-
 }

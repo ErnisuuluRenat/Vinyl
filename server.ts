@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import { productsRoute } from './routes/products.js'
+import { productsRoute } from './routes/products'
 
 const PORT = 8000
 const app = express()

@@ -5,10 +5,10 @@
   "license": "ISC",
   "author": "Renat",
   "type": "module",
-  "main": "server.js",
+  "main": "server.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "tsx server.ts"
   },
   "dependencies": {
     "cors": "^2.8.6",
@@ -16,5 +16,8 @@
     "sqlite": "^5.1.1",
     "sqlite3": "^6.0.1",
     "validator": "^13.15.35"
+  },
+  "devDependencies": {
+    "tsx": "^4.22.4"
   }
 }
