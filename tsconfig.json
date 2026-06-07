@@ -5,6 +5,6 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "outDir": "./dist",
-    "types" : ["node", "express", "cors", "validator"]
+    "types" : ["node", "express", "cors", "validator", "bcryptjs", "express-session"]
   }
 }

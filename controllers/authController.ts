@@ -1,12 +1,19 @@
 import { Request, Response } from "express";
 import validator from "validator"
 import { getDBConnection } from "../db/db";
+import bcrypt from "bcryptjs";
 
 type AuthFields = {
     name : string
     email : string
     username: string
     password: string
+}
+
+declare module 'express-session' {
+    interface SessionData {
+        userId : number
+    }
 }
 
 export async function registerUser(req : Request, res : Response): Promise<void> {
@@ -29,14 +36,17 @@ export async function registerUser(req : Request, res : Response): Promise<void>
         res.status(400).json({ error: "Invalid email or username" })
         return
     }
-    
+
+    const hashedPassword: string = await bcrypt.hash(password, 10) 
     try {
         const db = await getDBConnection()
 
         const user = await db.get(`SELECT * from USERS where username = ? OR email = ?`, [username, email])
 
         if (user === undefined) {
-            await db.run(`INSERT INTO USERS (name, email, username, password) VALUES (?, ?, ?, ?)`, [name, email, username, password])
+            const result = await db.run(`INSERT INTO USERS (name, email, username, password) VALUES (?, ?, ?, ?)`, [name, email, username, hashedPassword])
+
+            req.session.userId = result.lastID
             res.status(201).json({ message: 'User registered'})
             return
         } else {
