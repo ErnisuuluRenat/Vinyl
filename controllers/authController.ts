@@ -16,6 +16,11 @@ declare module 'express-session' {
     }
 }
 
+type UserFields = {
+    password : string
+    id: number
+}
+
 export async function registerUser(req : Request, res : Response): Promise<void> {
     console.log("Req body", req.body)
 
@@ -57,6 +62,46 @@ export async function registerUser(req : Request, res : Response): Promise<void>
         if(err instanceof(Error)) {
             console.log(`Registration Error`, err.message)
             res.status(500).json({error: "Registration failed. Please try again."})
+        } else {
+            console.log(`Unexpected error occured: `, err)
+        }
+    }
+}
+
+export async function loginUser(req: Request, res: Response): Promise<void> {
+    try{
+        const db = await getDBConnection()
+        const {username, password} = req.body
+
+        if (!username || !password) {
+            res.status(400).json({error: "All fields are required"})
+            return
+        }
+
+        const user:  UserFields | undefined = await db.get('SELECT password, id from users where username = ?', [username])
+
+        if (user === undefined) {
+            res.status(401).json({error: "Invalid credentials"})
+            return
+        }
+
+        const compare = await bcrypt.compare(password, user.password)
+
+        if (!compare) {
+            res.status(400).json({error: "Invalid credentials"})
+            return
+        }
+        req.session.userId = user.id
+        
+        res.status(200).json({message: 'Logged in'})
+    }
+
+    catch(err) {
+        if (err instanceof(Error)) {
+            console.log("LoginUser error: ", err.message)
+            res.status(500).json({error: "Log in failed"})
+        } else{
+            console.log('Unexpected error occured ', err)
         }
     }
 }
