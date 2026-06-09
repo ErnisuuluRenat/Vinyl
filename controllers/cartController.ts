@@ -5,6 +5,10 @@ type CartItem = {
     productId : string
 }
 
+type CartCount = {
+    total : number
+}
+
 export async function addItemToCart(req: Request, res: Response) : Promise<void> {
 
     if (!req.session.userId) {
@@ -45,5 +49,25 @@ export async function addItemToCart(req: Request, res: Response) : Promise<void>
 }
 
 export async function getCartCount(req: Request, res: Response) : Promise<void> {
+    const db = await getDBConnection()
+
+    if (!req.session.userId) {
+        res.status(401).json({message: "Unauthorized user"})
+        return
+    }
+
+    const userId = req.session.userId
+
+    try {
+        const result : CartCount | undefined = await db.get(`SELECT SUM(quantity) as total from cart_items where user_id = ? `, [userId])
+
+        res.status(200).json({totalItems: result?.total || 0})
+    } catch(err) {
+        if (err instanceof(Error)) {
+            console.log('Get cart count error: ', err.message)
+        } else {
+            console.log('Unexpected error: ', err)
+        }
+    }
 
 }
