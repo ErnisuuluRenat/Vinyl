@@ -14,7 +14,7 @@ async function init() {
   const username = await checkAuth()
   renderGreeting(username)
   renderProducts(products)
-  // showHideMenuItems(username)
+  showHideMenuItems(username)
   // if (username) {
   //   await updateCartIcon()
   // }

@@ -45,5 +45,23 @@ async function viewAllUsers(): Promise<void> {
     }
 }
 
+async function viewAllCartItems(): Promise<void> {
+    const db = await open({
+        filename: 'database.db',
+        driver: sqlite3.Database
+    })
 
-viewAllUsers()
+    try {
+        const cartItems = await db.all('SELECT * from cart_items')
+        console.table(cartItems)
+    } catch(err) {
+        if (err instanceof(Error)) {
+            console.log(`Getting all of cards error: `, err)
+        } else {
+            console.log("Unexpected error: ", err)
+        }
+    }
+}
+
+
+viewAllCartItems()

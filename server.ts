@@ -3,6 +3,7 @@ import cors from 'cors'
 import { productsRoute } from './routes/products'
 import { authRouter } from './routes/auth'
 import { meRouter } from './routes/me'
+import { cartRouter } from './routes/cart'
 import session from 'express-session'
 import dotenv from 'dotenv'
 
@@ -33,6 +34,7 @@ app.use(express.static('public'))
 app.use("/api", productsRoute)
 app.use("/api/auth/me", meRouter)
 app.use("/api/auth", authRouter)
+app.use("/api/cart", cartRouter)
 
 app.listen(PORT, () => {
     console.log(`Server is listening on port:${PORT}`)

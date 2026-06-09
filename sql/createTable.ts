@@ -2,6 +2,8 @@ import sqlite3 from 'sqlite3'
 import { open } from 'sqlite'
 import path from "node:path"
 
+const pathDir = path.join('database.db')
+
 async function createTable(): Promise<void> {
     const db = await open({
         filename: "database.db",
@@ -44,4 +46,23 @@ async function createTableUsers() : Promise<void> {
     console.log('Table users was successfully created')
 }
 
-createTableUsers()
+async function createTableCart() : Promise<void> {
+    const db = await open({
+        filename: pathDir,
+        driver: sqlite3.Database
+    })
+
+    await db.exec(`CREATE TABLE IF NOT EXISTS cart_items (
+            id integer primary key autoincrement,
+            user_id integer not null,
+            product_id integer not null,
+            quantity integer not null default 1,
+            foreign key (user_id) references users(id),
+            foreign key (product_id) references products(id)
+        )`)
+
+    await db.close()
+    console.log("Cart table was successfully created")
+}
+
+createTableCart()

@@ -105,3 +105,19 @@ export async function loginUser(req: Request, res: Response): Promise<void> {
         }
     }
 }
+
+export async function logoutUser(req : Request, res : Response): Promise<void> {
+    try {
+
+        req.session.destroy(() => {
+            res.json({message: 'Logged out'})
+        })
+
+    } catch(err) {
+        if (err instanceof(Error)) {
+            console.log("Logout error: ", err)
+        } else {
+            console.log("Unexpected error: ", err)
+        }
+     }
+}
