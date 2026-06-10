@@ -1,12 +1,48 @@
 import { Request, Response } from "express";
 import { getDBConnection } from "../db/db";
 
-type CartItem = {
+type cartProductId = {
     productId : string
 }
 
 type CartCount = {
     total : number
+}
+
+type cartItem = {
+    product_id : number,
+    user_id : number,
+    id : number,
+    quantity: number
+}
+
+type ItemParams = {
+    itemId: string
+}
+
+export async function getAll(req : Request, res: Response): Promise<void> {
+    if (!req.session.userId) {
+        res.status(401).json({message: "Unauthorized user"})
+    }
+
+    try {
+        const db = await getDBConnection()
+
+    // const items : cartItem[] = await db.all('select * from cart_items')
+
+    // const itemsId = items.map((item) => item.product_id)
+    // const placeholders = itemsId.map(() => '?').join(', ')
+
+        const items = await db.all('select cart_items.id as cartItemId, cart_items.quantity, products.title, products.artist, products.price from cart_items join products on cart_items.product_id = products.id where cart_items.user_id = ?', [req.session.userId])
+
+        res.status(200).json({items: items})
+    }catch(err) {
+        if (err instanceof(Error)) {
+            console.log('Get all cart items error: ', err.message)
+        } else {
+            console.log('Unexpected error: ', err)
+        }
+    }
 }
 
 export async function addItemToCart(req: Request, res: Response) : Promise<void> {
@@ -17,7 +53,7 @@ export async function addItemToCart(req: Request, res: Response) : Promise<void>
     }
 
     const userId = req.session.userId
-    const {productId} = req.body as CartItem
+    const {productId} = req.body as cartProductId
 
     if (!productId || Number.isNaN(parseInt(productId, 10))) {
          res.status(400).json({message: "Invalid product id"})
@@ -70,4 +106,39 @@ export async function getCartCount(req: Request, res: Response) : Promise<void> 
         }
     }
 
+}
+
+export async function deleteItem(req: Request, res: Response) : Promise<void> {
+    try {
+        const db = await getDBConnection()
+
+        if (!req.session.userId) {
+            res.status(401).json({message: "Unauthorized user"})
+            return
+        }
+
+        const {itemId} = req.params as ItemParams
+
+        if (!itemId || Number.isNaN(parseInt(itemId, 10))) {
+            res.status(400).json({ error: 'Invalid item ID' })
+            return
+        }
+
+        const itemExists = await db.get('Select quantity from cart_items where id = ? and user_id = ?', [itemId, req.session.userId])
+
+        if(itemExists) {
+            await db.run('DELETE from cart_items where id = ?', [itemId])
+            res.status(204).send()
+            return
+        } else {
+            res.status(400).json({ error: 'Invalid item ID' })
+        }
+        
+    } catch(err) {
+        if (err instanceof(Error)) {
+            console.log("Delete item error: ", err.message)
+        } else {
+            console.log("Unexpected error: ", err)
+        }
+    } 
 }
