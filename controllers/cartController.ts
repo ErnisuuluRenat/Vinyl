@@ -142,3 +142,24 @@ export async function deleteItem(req: Request, res: Response) : Promise<void> {
         }
     } 
 }
+
+export async function deleteAll(req: Request, res: Response) : Promise<void>{
+    try {
+        const db = await getDBConnection()
+
+        if (!req.session.userId) {
+            res.status(401).json({message: "Unauthorized user"})
+            return
+        }
+
+        await db.run(`DELETE FROM cart_items where user_id = ?`, [req.session.userId])
+        res.status(204).send()
+
+    } catch(err) {
+        if (err instanceof(Error)) {
+            console.log('Delete all error: ', err.message)
+        } else {
+            console.log('Unexpected error: ', err)
+        }
+    }
+}
