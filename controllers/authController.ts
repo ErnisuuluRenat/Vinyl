@@ -2,13 +2,8 @@ import { Request, Response } from "express";
 import validator from "validator"
 import { getDBConnection } from "../db/db";
 import bcrypt from "bcryptjs";
-
-type AuthFields = {
-    name : string
-    email : string
-    username: string
-    password: string
-}
+import { RegisterUserDto } from "../dto/register_user.dto";
+import { LoginUserDto, UserCredentials } from "../dto/login.dto";
 
 declare module 'express-session' {
     interface SessionData {
@@ -16,15 +11,11 @@ declare module 'express-session' {
     }
 }
 
-type UserFields = {
-    password : string
-    id: number
-}
 
-export async function registerUser(req : Request, res : Response): Promise<void> {
+export async function registerUser(req : Request<{}, {}, RegisterUserDto>, res : Response): Promise<void> {
     console.log("Req body", req.body)
-
-    let {name, email, username, password} : AuthFields = req.body
+    // Now req body is expected to be RegisterUserDto
+    let {name, email, username, password}  = req.body
 
     const regex : RegExp = new RegExp("^[a-zA-Z0-9_-]{1,20}$")
 
@@ -68,7 +59,7 @@ export async function registerUser(req : Request, res : Response): Promise<void>
     }
 }
 
-export async function loginUser(req: Request, res: Response): Promise<void> {
+export async function loginUser(req: Request<{}, {}, LoginUserDto>, res: Response): Promise<void> {
     try{
         const db = await getDBConnection()
         const {username, password} = req.body
@@ -78,7 +69,7 @@ export async function loginUser(req: Request, res: Response): Promise<void> {
             return
         }
 
-        const user:  UserFields | undefined = await db.get('SELECT password, id from users where username = ?', [username])
+        const user:  UserCredentials | undefined = await db.get('SELECT password, id from users where username = ?', [username])
 
         if (user === undefined) {
             res.status(401).json({error: "Invalid credentials"})

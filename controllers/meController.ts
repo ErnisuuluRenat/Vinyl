@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import { getDBConnection } from "../db/db";
+import { MeUserDto } from "../dto/me_user.dto";
 
 type Username = {
     username: string
 }
 
-export async function getCurrentUser(req: Request, res:Response): Promise<void> {
+export async function getCurrentUser(req: Request<{}, MeUserDto, {}>, res:Response): Promise<void> {
     try {
         const db = await getDBConnection()
 
