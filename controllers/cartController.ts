@@ -1,28 +1,21 @@
 import { Request, Response } from "express";
 import { getDBConnection } from "../db/db";
+import { CartAllDto, CartProductIdDto, CartAddItemDto } from "../dto/cart.dto";
+import { MessageDto, ErrorDto } from "../dto/common.dto";
 
-type cartProductId = {
-    productId : string
-}
 
 type CartCount = {
     total : number
-}
-
-type cartItem = {
-    product_id : number,
-    user_id : number,
-    id : number,
-    quantity: number
 }
 
 type ItemParams = {
     itemId: string
 }
 
-export async function getAll(req : Request, res: Response): Promise<void> {
+export async function getAll(req : Request<{}, {items: CartAllDto[] | MessageDto | ErrorDto }, {}>, res: Response): Promise<void> {
     if (!req.session.userId) {
         res.status(401).json({message: "Unauthorized user"})
+        return
     }
 
     try {
@@ -39,13 +32,15 @@ export async function getAll(req : Request, res: Response): Promise<void> {
     }catch(err) {
         if (err instanceof(Error)) {
             console.log('Get all cart items error: ', err.message)
+            res.status(500).json({error: `Get all cart items error ${err.message}`})
         } else {
             console.log('Unexpected error: ', err)
+            res.status(500).json({error: "Unexpected error occurred"})
         }
     }
 }
 
-export async function addItemToCart(req: Request, res: Response) : Promise<void> {
+export async function addItemToCart(req: Request<{},CartAddItemDto , CartProductIdDto>, res: Response) : Promise<void> {
 
     if (!req.session.userId) {
         res.status(401).json({message: "Unauthorized user"})
@@ -53,7 +48,7 @@ export async function addItemToCart(req: Request, res: Response) : Promise<void>
     }
 
     const userId = req.session.userId
-    const {productId} = req.body as cartProductId
+    const {productId} = req.body
 
     if (!productId || Number.isNaN(parseInt(productId, 10))) {
          res.status(400).json({message: "Invalid product id"})
@@ -67,9 +62,8 @@ export async function addItemToCart(req: Request, res: Response) : Promise<void>
 
         if(!itemExists) {
             await db.run('insert into cart_items (user_id, product_id) values (?, ?)', [userId, productId])
-
             console.log('added to cart')
-
+            res.status(201).json({message: "Added to cart"})
             return
         } else { 
             await db.run('update cart_items set quantity = quantity + ? where product_id = ? and user_id = ?', [1, productId, userId])
@@ -78,8 +72,10 @@ export async function addItemToCart(req: Request, res: Response) : Promise<void>
    } catch(err) {
     if (err instanceof(Error)) {
         console.log('Error adding item to cart: ', err.message)
+        res.status(500).json({error: err.message})
     } else {
         console.log('Unexpected error: ', err)
+        res.status(500).json({error: "Unexpected error occurred"})
     }
    }
 }
