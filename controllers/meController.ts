@@ -27,6 +27,9 @@ export async function getCurrentUser(req: Request<{}, MeUserDto, {}>, res:Respon
     }catch(err) {
         if (err instanceof(Error)) {
             console.log("getCurrentUser error: ", err)
+            res.status(500).json({error : err.message})
+        } else {
+            res.status(500).json({error: "Unexpected error"})
         }
     }
 }

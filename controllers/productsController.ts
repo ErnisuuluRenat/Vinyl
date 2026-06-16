@@ -1,9 +1,9 @@
 import { Request, Response } from "express"
 import { getDBConnection } from "../db/db"
+import { ProductGenresDto, ProductQueryDto, ProductsDto } from "../dto/product.dto"
+import { ErrorDto } from "../dto/common.dto"
 
-export async function getGenres(req : Request, res : Response) {
-
-  console.log('genres')
+export async function getGenres(req : Request<{}, ProductGenresDto[] | ErrorDto>, res : Response) {
 
   try {
     const db = await getDBConnection()
@@ -12,17 +12,17 @@ export async function getGenres(req : Request, res : Response) {
     const genres = products.map((product) => product['genre'])
 
     res.status(200).json([...new Set(genres)])
-  } catch(err : unknown) {
+  } catch(err) {
     if (err instanceof(Error)) {
-      res.status(500).json({error : "Failed to fetch genres", details: err.message})
+      res.status(500).json({error : `Failed to fetch genres, ${err.message}`})
     } else {
-      res.status(500).json({error: "Unexpected error occured:", err})
+      res.status(500).json({error: "Unexpected error occured:"})
     }
   }
 
 }
 
-export async function getProducts(req : Request, res: Response) {
+export async function getProducts(req : Request<{}, ProductsDto | ErrorDto, {}, ProductQueryDto >, res: Response) {
     try {
     const db = await getDBConnection()
 
@@ -53,9 +53,9 @@ export async function getProducts(req : Request, res: Response) {
 
   } catch(err : unknown) {
     if (err instanceof(Error)) {
-      res.status(500).json({error : "Failed to fetch genres", details: err.message})
+      res.status(500).json({error : `Failed to fetch genres ${err.message}`})
     } else {
-      res.status(500).json({error: "Unexpected error occured:", err})
+      res.status(500).json({error: "Unexpected error occured:"})
     }
   }
 }

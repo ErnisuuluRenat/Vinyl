@@ -4,6 +4,7 @@ import { getDBConnection } from "../db/db";
 import bcrypt from "bcryptjs";
 import { RegisterUserDto } from "../dto/register_user.dto";
 import { LoginUserDto, UserCredentials } from "../dto/login.dto";
+import { MessageDto, ErrorDto } from "../dto/common.dto";
 
 declare module 'express-session' {
     interface SessionData {
@@ -12,7 +13,7 @@ declare module 'express-session' {
 }
 
 
-export async function registerUser(req : Request<{}, {}, RegisterUserDto>, res : Response): Promise<void> {
+export async function registerUser(req : Request<{}, MessageDto | ErrorDto, RegisterUserDto>, res : Response): Promise<void> {
     console.log("Req body", req.body)
     // Now req body is expected to be RegisterUserDto
     let {name, email, username, password}  = req.body
@@ -55,11 +56,12 @@ export async function registerUser(req : Request<{}, {}, RegisterUserDto>, res :
             res.status(500).json({error: "Registration failed. Please try again."})
         } else {
             console.log(`Unexpected error occured: `, err)
+            res.status(500).json({error: "Unexpected error"})
         }
     }
 }
 
-export async function loginUser(req: Request<{}, {}, LoginUserDto>, res: Response): Promise<void> {
+export async function loginUser(req: Request<{}, MessageDto | ErrorDto, LoginUserDto>, res: Response): Promise<void> {
     try{
         const db = await getDBConnection()
         const {username, password} = req.body
@@ -93,11 +95,12 @@ export async function loginUser(req: Request<{}, {}, LoginUserDto>, res: Respons
             res.status(500).json({error: "Log in failed"})
         } else{
             console.log('Unexpected error occured ', err)
+            res.status(500).json({error: "Unexpected error"})
         }
     }
 }
 
-export async function logoutUser(req : Request, res : Response): Promise<void> {
+export async function logoutUser(req : Request<{}, MessageDto | ErrorDto, {}>, res : Response): Promise<void> {
     try {
 
         req.session.destroy(() => {
@@ -106,9 +109,11 @@ export async function logoutUser(req : Request, res : Response): Promise<void> {
 
     } catch(err) {
         if (err instanceof(Error)) {
-            console.log("Logout error: ", err)
+            console.log("Logout error: ", err.message)
+            res.status(500).json({error : err})
         } else {
             console.log("Unexpected error: ", err)
+            res.status(500).json({error : "Unexpected error"})
         }
      }
 }
