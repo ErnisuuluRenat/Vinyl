@@ -1,16 +1,8 @@
 import { Request, Response } from "express";
 import { getDBConnection } from "../db/db";
 import { CartAllDto, CartProductIdDto, CartAddItemDto } from "../dto/cart.dto";
-import { MessageDto, ErrorDto } from "../dto/common.dto";
+import { MessageDto, ErrorDto, CartCountDto } from "../dto/common.dto";
 
-
-type CartCount = {
-    total : number
-}
-
-type ItemParams = {
-    itemId: string
-}
 
 export async function getAll(req : Request<{}, {items: CartAllDto[] | MessageDto | ErrorDto }, {}>, res: Response): Promise<void> {
     if (!req.session.userId) {
@@ -80,8 +72,8 @@ export async function addItemToCart(req: Request<{},CartAddItemDto , CartProduct
    }
 }
 
-export async function getCartCount(req: Request, res: Response) : Promise<void> {
-    const db = await getDBConnection()
+export async function getCartCount(req: Request<{}, MessageDto | ErrorDto | CartCountDto, {}>, res: Response) : Promise<void> {
+    
 
     if (!req.session.userId) {
         res.status(401).json({message: "Unauthorized user"})
@@ -91,20 +83,23 @@ export async function getCartCount(req: Request, res: Response) : Promise<void> 
     const userId = req.session.userId
 
     try {
-        const result : CartCount | undefined = await db.get(`SELECT SUM(quantity) as total from cart_items where user_id = ? `, [userId])
+        const db = await getDBConnection()
+        const result = await db.get(`SELECT SUM(quantity) as total from cart_items where user_id = ? `, [userId])
 
         res.status(200).json({totalItems: result?.total || 0})
     } catch(err) {
         if (err instanceof(Error)) {
             console.log('Get cart count error: ', err.message)
+            res.status(500).json({error: err.message})       
         } else {
             console.log('Unexpected error: ', err)
+            res.status(500).json({error: 'Unexpected error'})
         }
     }
 
 }
 
-export async function deleteItem(req: Request, res: Response) : Promise<void> {
+export async function deleteItem(req: Request<{itemId : string}, MessageDto | ErrorDto, {}>, res: Response) : Promise<void> {
     try {
         const db = await getDBConnection()
 
@@ -113,7 +108,7 @@ export async function deleteItem(req: Request, res: Response) : Promise<void> {
             return
         }
 
-        const {itemId} = req.params as ItemParams
+        const {itemId} = req.params 
 
         if (!itemId || Number.isNaN(parseInt(itemId, 10))) {
             res.status(400).json({ error: 'Invalid item ID' })
@@ -133,13 +128,15 @@ export async function deleteItem(req: Request, res: Response) : Promise<void> {
     } catch(err) {
         if (err instanceof(Error)) {
             console.log("Delete item error: ", err.message)
+            res.status(500).json({error: err.message})
         } else {
             console.log("Unexpected error: ", err)
+            res.status(500).json({error: "Unexpected error"})
         }
     } 
 }
 
-export async function deleteAll(req: Request, res: Response) : Promise<void>{
+export async function deleteAll(req: Request<{}, MessageDto | ErrorDto, {}>, res: Response) : Promise<void>{
     try {
         const db = await getDBConnection()
 
@@ -154,8 +151,10 @@ export async function deleteAll(req: Request, res: Response) : Promise<void>{
     } catch(err) {
         if (err instanceof(Error)) {
             console.log('Delete all error: ', err.message)
+            res.status(500).json({error: err.message})
         } else {
             console.log('Unexpected error: ', err)
+            res.status(500).json({error: "Unexpected error"})
         }
     }
 }
